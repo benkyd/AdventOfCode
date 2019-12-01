@@ -10,7 +10,7 @@ int fuelForMass ( int mass, int accumilator = 0 )
     if ( res > 0 ) 
         return fuelForMass( res, accumilator + res );
 
-    return res;
+    return accumilator;
 
 };
 
