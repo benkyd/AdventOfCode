@@ -10,9 +10,10 @@ std::vector<int> tokenise( std::string input )
     std::vector<int> stream;
 
     std::string s;
-	while( std::getline( ssInput, s, ',' ) ) {
-		stream.push_back( std::stoi( s ) );
-	}
+    while( std::getline( ssInput, s, ',' ) )
+    {
+        stream.push_back( std::stoi( s ) );
+    }
 
     return stream;
 }
