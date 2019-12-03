@@ -84,10 +84,10 @@ int main(int argc, char** argv)
     std::string input;
 
     std::getline( infile, input );
-    std::vector<std::string> wireS1 = tokenise( "R75,D30,R83,U83,L12,D49,R71,U7,L72"); // tokenise( input );
+    std::vector<std::string> wireS1 = tokenise( input );
 
     std::getline( infile, input );
-    std::vector<std::string> wireS2 = tokenise( "U62,R66,U55,R34,D71,R55,D58,R83" );// tokenise( input );
+    std::vector<std::string> wireS2 = tokenise( input );
 
     // Construct map of nodes
     // for each point a wire
@@ -132,30 +132,19 @@ int main(int argc, char** argv)
         return -1;
     };
 
-
-    std::unordered_map<vec2, int> wires;
-
-    for ( int i = 0; i < wire1.Visited.size(); i++ )
-    {
-        wires[wire1.Visited[i]] = 1;
-    }
-
-    for ( int i = 0; i < wire2.Visited.size(); i++ )
-    {
-        if ( wires[wire1.Visited[i]] == 1 )
-            wires[wire1.Visited[i]]++;
-    }
- 
     std::vector<int> intersectDistances;
 
-	for ( auto it = wires.begin(); it != wires.end(); it++ )
+    // This takes a good few seconds
+	for ( int i = 0; i < wire1.Visited.size(); i++ )
     {
-        if ( it->second == 2 )
+
+        vec2 v = wire1.Visited[i];
+        if ( find( wire2.Visited, v ) != -1 )
         {
-            vec2 v = it->first;
-            std::cout << v.x << " " << v.y << std::endl;
+            std::cout << "Found : " << v.x << " " << v.y << std::endl;
             intersectDistances.push_back( std::abs( v.x ) + std::abs( v.y ) );
         }
+
     }
 
     int minDistance = *std::min_element( intersectDistances.cbegin(), intersectDistances.cend() );
