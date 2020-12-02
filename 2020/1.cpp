@@ -5,7 +5,7 @@
 
 int main()
 {
-    std::ifstream file ("./1i.txt");
+    std::ifstream file ("./1.txt");
     std::vector<int> input;
     std::string line;
     
