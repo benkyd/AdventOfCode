@@ -52,6 +52,8 @@
         "xhash": "cpp",
         "xlocmon": "cpp",
         "xloctime": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "atomic": "cpp",
+        "compare": "cpp"
     }
 }
