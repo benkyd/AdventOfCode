@@ -39,7 +39,6 @@ for (const tower of resultingTowers1)
 console.log(`Part 1: ${part1}`)
 
 const resultingTowers2 = parseTowers(setup);
-console.log(resultingTowers2)
 for (const instruction of challenge) {
     const order = instruction.split(' ').filter(e => !isNaN(parseInt(e))).map(e => parseInt(e));
     resultingTowers1[order[2]-1].push(...resultingTowers1[order[1]-1].splice(-1, order[0]));
