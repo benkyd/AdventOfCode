@@ -96,15 +96,23 @@ public:
 
     // Access a chunk of tokens for a given line
     // E.g. Iterate [1,2], [2,3], [3,4]
-    std::vector<std::vector<FileFragment>> ChunkView(int line, size_t n, size_t gap) {
-        std::vector<FileFragment> v = _tokens[line];
+    std::vector<std::vector<FileFragment>> ChunkView(int line, size_t size, size_t stride)
+    {
+        const auto& v = _tokens[line];
         std::vector<std::vector<FileFragment>> chunks;
-        for (size_t i = 0; i < v.size() - 1; i += gap) {
-            chunks.emplace_back(v.begin() + i,
-                                v.begin() + std::min(v.size(), i + n));
+
+        if (v.empty() || stride == 0)
+            return chunks;
+
+        for (size_t i = 0; i + size <= v.size(); i += stride)
+        {
+            std::cout << "max " << i + size << " tokens " << v.size() << " index " << i << " size " << size << " stride " << stride << std::endl;
+            chunks.emplace_back(v.begin() + i, v.begin() + i + size);
         }
+
         return chunks;
     }
+
 
     /// Iterate through all lines and their tokens
     auto begin() const { return _tokens.begin(); }
