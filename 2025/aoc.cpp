@@ -1,13 +1,12 @@
 #include <iostream>
+#include <chrono>
 
 #include "aoc.hpp"
 #include "day1.hpp"
-#include "day2.hpp"
-#include "day3.hpp"
 
 int main(int argc, char** argv)
 {
-    std::cout << "Advent of Code 2024 runner" << std::endl;
+    std::cout << "Advent of Code 2025 runner" << std::endl;
     std::cout << "©Ben Kyd 2025, All Rights Reserved" << std::endl;
 
     // Very shit command-line parsing :tm:
@@ -77,9 +76,10 @@ int main(int argc, char** argv)
 
             std::cout << "Reading " << path << "..." << std::endl;
             File file{path};
+            File file1{path};
 
             int partOne = day->PartOne(file);
-            int partTwo = day->PartTwo(file);
+            int partTwo = day->PartTwo(file1);
 
             std::cout << "Part 1: " << partOne << "\n";
             std::cout << "Part 2: " << partTwo << "\n";
@@ -95,12 +95,22 @@ int main(int argc, char** argv)
 
             std::cout << "Reading " << path << "..." << std::endl;
             File file{path};
+            File file1{path};
+
+            auto start = std::chrono::high_resolution_clock::now();
 
             int partOne = day->PartOne(file);
-            int partTwo = day->PartTwo(file);
 
-            std::cout << "Part 1: " << partOne << "\n";
-            std::cout << "Part 2: " << partTwo << "\n";
+            auto endpart1 = std::chrono::high_resolution_clock::now();
+            auto startpart2 = std::chrono::high_resolution_clock::now();
+
+            int partTwo = day->PartTwo(file1);
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            std::cout << "Part 1: " << partOne << " - took " << std::chrono::duration<double, std::milli>(endpart1 - start).count() << "ms" << std::endl;
+            std::cout << "Part 2: " << partTwo << " - took " << std::chrono::duration<double, std::milli>(end - startpart2).count() << "ms" << std::endl;
+            std::cout << "Day " << run_day << " ran in " << std::chrono::duration<double, std::milli>(end - start).count() << "ms" << std::endl;
         }
     }
 
