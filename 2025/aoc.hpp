@@ -12,6 +12,11 @@ struct FileFragment
     std::string Data;
 };
 
+inline std::pair<FileFragment, FileFragment> SplitToken(std::string del)
+{
+
+}
+
 class File
 {
 public:
