@@ -10,7 +10,7 @@ public:
     ~Day02() {}
     int Day() override {return 2;}
 
-    int PartOne(File& f) override
+    uint64_t PartOne(File& f) override
     {
         f.SplitBy(",");
 
@@ -43,16 +43,16 @@ public:
             }
         }
 
-        std::cout << "The answer doesn't fit in int : "<< res << std::endl;
         return res;
     }
 
-    int PartTwo(File& f) override
+    uint64_t PartTwo(File& f) override
     {
         f.SplitBy(",");
 
         uint64_t res = 0;
 
+        // For every range like "11-22" in line 0
         for (auto range : f.TokensForLine(0))
         {
             int dash = range.Data.find('-', 0);
@@ -60,56 +60,49 @@ public:
             uint64_t a = std::stoll(range.Data.substr(0, dash));
             uint64_t b = std::stoll(range.Data.substr(dash + 1));
 
-            for (uint64_t i = a; i <= b; i++)
+            // Loop every ID in the range
+            for (uint64_t id = a; id <= b; ++id)
             {
-                std::string current = std::to_string(i);
-                int n = current.length();
+                std::string s = std::to_string(id);
+                int digits = s.length();
 
                 bool invalid = false;
 
-                // Try every possible substring start (i)
-                for (int start = 0; start < n && !invalid; start++)
+                for (int L = 1; L <= digits / 2 && !invalid; ++L)
                 {
-                    std::string accum;
+                    // MUST divide evenly, otherwise blocks won't align
+                    if (digits % L != 0)
+                        continue;
 
-                    // Build accum char-by-char
-                    for (int end = start; end < n && !invalid; end++)
+                    uint64_t base = 1;
+                    for (int i = 0; i < L; i++)
+                        base *= 10;  // base = 10^L
+
+                    uint64_t block = id % base;
+                    uint64_t tail = id;
+                    int count = 0;
+
+                    while (tail > 0)
                     {
-                        accum.push_back(current[end]);
-
-                        int len = accum.length();
-                        int remaining = n - start;
-
-                        // Now check if repeats match
-                        bool matches = true;
-
-                        for (int rep = 0; rep < remaining / len; rep++)
-                        {
-                            if (current.compare(start + rep * len, len, accum) != 0)
-                            {
-                                matches = false;
-                                break;
-                            }
-                        }
-
-                        // Must be at least two repeats
-                        if (matches && remaining / len >= 2)
-                        {
-                            invalid = true;
+                        if (tail % base != block)
                             break;
-                        }
+
+                        tail /= base;
+                        count++;
                     }
+
+                    if (tail == 0 && count >= 2)
+                        invalid = true;
                 }
 
-            if (invalid)
-                res += i;
+                if (invalid)
+                    res += id;
+            }
         }
-    }
 
-
-        std::cout << "The answer doesn't fit in int : "<< res << std::endl;
         return res;
     }
+
 };
 
 ADD_AOC_DAY(Day02);

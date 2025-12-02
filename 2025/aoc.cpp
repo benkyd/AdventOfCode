@@ -79,7 +79,7 @@ int main(int argc, char** argv)
             File file{path};
             File file1{path};
 
-            int partOne = day->PartOne(file);
+            uint64_t partOne = day->PartOne(file);
             int partTwo = day->PartTwo(file1);
 
             std::cout << "Part 1: " << partOne << "\n";
@@ -100,12 +100,12 @@ int main(int argc, char** argv)
 
             auto start = std::chrono::high_resolution_clock::now();
 
-            int partOne = day->PartOne(file);
+            uint64_t partOne = day->PartOne(file);
 
             auto endpart1 = std::chrono::high_resolution_clock::now();
             auto startpart2 = std::chrono::high_resolution_clock::now();
 
-            int partTwo = day->PartTwo(file1);
+            uint64_t partTwo = day->PartTwo(file1);
 
             auto end = std::chrono::high_resolution_clock::now();
 

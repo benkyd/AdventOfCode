@@ -17,7 +17,7 @@ public:
         if (dial < 0) dial += 100;
     }
 
-    int PartOne(File& f) override
+    uint64_t PartOne(File& f) override
     {
         f.SplitByIndex(1);
 
@@ -41,7 +41,7 @@ public:
         return res;
     }
 
-    int PartTwo(File& f) override
+    uint64_t PartTwo(File& f) override
     {
         f.SplitByIndex(1);
 

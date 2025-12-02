@@ -179,8 +179,8 @@ class AOCDay
         // return 1 -> 1.txt
         virtual int Day() = 0;
 
-        virtual int PartOne(File&) = 0;
-        virtual int PartTwo(File&) = 0;
+        virtual uint64_t PartOne(File&) = 0;
+        virtual uint64_t PartTwo(File&) = 0;
 };
 
 inline std::unordered_map<int, AOCDay*>& GetRegisteredDays(int day = 0)

@@ -1,5 +1,5 @@
 CXX := clang++
-CXXFLAGS := -std=c++17 -Wall -Wextra -I.
+CXXFLAGS := -std=c++17 -Wall -Wextra -I. -O3
 
 TARGET := aoc
 SRC := aoc.cpp
