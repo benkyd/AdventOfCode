@@ -1,9 +1,67 @@
 #include <iostream>
 #include <chrono>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 #include "aoc.hpp"
 #include "day1.hpp"
 #include "day2.hpp"
+#include "day3.hpp"
+
+void GenerateDay(int day, std::filesystem::path base)
+{
+    std::cout << "Ganerating template for day " << day << std::endl;
+    std::ostringstream className;
+    className << "Day" << std::setw(2) << std::setfill('0') << day; // Day01
+    std::string classStr = className.str();
+
+    std::string headerName = "day" + std::to_string(day) + ".hpp";  // day1.hpp
+    std::string inputName  = std::to_string(day) + ".txt";          // 1.txt
+
+    std::filesystem::path headerPath = base / headerName;
+    std::filesystem::path inputPath  = base / inputName;
+
+    if (std::filesystem::exists(headerPath)) {
+        std::cerr << headerName << " already exists. Aborting." << std::endl;
+        return;
+    }
+
+    std::ofstream out(headerPath);
+    if (!out) {
+        std::cerr << "Failed to write " << headerName << std::endl;
+        return;
+    }
+
+    out << "#pragma once\n";
+    out << "#include \"aoc.hpp\"\n\n";
+    out << "class " << classStr << " : public AOCDay\n";
+    out << "{\n";
+    out << "public:\n";
+    out << "    " << classStr << "() {}\n";
+    out << "    ~" << classStr << "() {}\n";
+    out << "    int Day() override { return " << day << "; }\n\n";
+    out << "    uint64_t PartOne(File& f) override\n";
+    out << "    {\n";
+    out << "        return 0;\n";
+    out << "    }\n\n";
+    out << "    uint64_t PartTwo(File& f) override\n";
+    out << "    {\n";
+    out << "        return 0;\n";
+    out << "    }\n";
+    out << "};\n\n";
+    out << "ADD_AOC_DAY(" << classStr << ");\n";
+
+    out.close();
+
+    std::ofstream input(inputPath);
+    input.close();
+
+    std::cout << "Generated:" << std::endl;
+    std::cout << "  " << headerPath << std::endl;
+    std::cout << "  " << inputPath << std::endl << std::endl;
+    std::cout << "Remember to include `" << headerName << "`" << std::endl;
+}
 
 int main(int argc, char** argv)
 {
@@ -19,7 +77,7 @@ int main(int argc, char** argv)
         std::string arg = argv[i];
 
         // Day flag
-        if (arg == "-d")
+        if (arg == "-d" || arg == "--day")
         {
             if (i + 1 >= argc)
             {
@@ -44,12 +102,25 @@ int main(int argc, char** argv)
             std::cout << "Selected base path: " << base.string() << "\n";
         }
 
+        if (arg == "-g" || arg == "--generate")
+        {
+            if (i + 1 >= argc)
+            {
+                std::cerr << "Error: -g requires a day number\n";
+                return 1;
+            }
+            ++i;
+            GenerateDay(std::atoi(argv[i]), base);
+            return 1;
+        }
+
         // Help flag
         if (arg == "help" || arg == "--help" || arg == "-h")
         {
             std::cout << "\nUsage:\n"
                       << "  -d [day]    Run a specific day\n"
                       << "  -p [path]   Set a base path for input\n"
+                      << "  -g [day]    Generate a new day! (Stil need to add to compiler)\n"
                       << "  help        Show this help message\n"
                       << "  (no args)   Run all days\n";
             return 0;
@@ -57,7 +128,8 @@ int main(int argc, char** argv)
 
         // Unknown argument
         if (arg != "-d" && arg != "-p" && arg != "--path" &&
-            arg != "help" && arg != "--help" && arg != "-h")
+            arg != "help" && arg != "--help" && arg != "-h" &&
+            arg != "-g" && arg != "--generate")
         {
             std::cerr << "Unknown argument: " << arg << "\n"
                       << "Use 'help' for usage information.\n";
