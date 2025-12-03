@@ -31,7 +31,6 @@ public:
             joltage = biggest;
             joltage *= 10;
 
-            std::cout << biggest;
             biggest = 0;
 
 
@@ -42,7 +41,6 @@ public:
                     biggest = bank[i] - '0';
                 }
             }
-            std::cout << biggest << std::endl;
 
             joltage += biggest;
 
@@ -52,8 +50,46 @@ public:
         return totalJoltage;
     }
 
+    std::pair<int,int> FindNextBiggestNoOffset(std::string bank, int startOffset, int endOffset)
+    {
+        int biggest = 0, biggestIndex = 0;
+        for (int i = startOffset; i < bank.length() - endOffset; i++)
+        {
+            if (bank[i] - '0' > biggest)
+            {
+                biggest = bank[i] - '0';
+                biggestIndex = i + 1;
+            }
+        }
+
+        return {biggest, biggestIndex};
+    }
+
     uint64_t PartTwo(File& f) override
     {
+        uint64_t totalJoltage = 0;
+
+        for (auto bank : f.Lines())
+        {
+            uint64_t joltage = 0;
+            int start = 0;
+
+            for (int i = 0; i < 12; i++)
+            {
+                joltage *= 10;
+
+                auto res = FindNextBiggestNoOffset(bank, start, 12 - i);
+
+                start = res.second;
+                joltage += res.first - '0';
+            }
+
+            std::cout << joltage << std::endl;
+
+            totalJoltage += joltage;
+        }
+
+        return totalJoltage;
     }
 
 };
