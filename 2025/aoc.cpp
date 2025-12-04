@@ -8,6 +8,7 @@
 #include "day1.hpp"
 #include "day2.hpp"
 #include "day3.hpp"
+#include "day4.hpp"
 
 void GenerateDay(int day, std::filesystem::path base)
 {

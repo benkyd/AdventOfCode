@@ -50,19 +50,26 @@ public:
         return totalJoltage;
     }
 
-    std::pair<int,int> FindNextBiggestNoOffset(std::string bank, int startOffset, int endOffset)
+
+    std::pair<int,int> FindNextBiggest(const std::string& s, int start, int k)
     {
-        int biggest = 0, biggestIndex = 0;
-        for (int i = startOffset; i < bank.length() - endOffset; i++)
+        int remaining = 12 - k - 1;
+        int lastAllowed = s.size() - remaining;   // inclusive upper bound
+
+        int bestDigit = -1;
+        int bestIndex = start;
+
+        for (int i = start; i < lastAllowed; i++)
         {
-            if (bank[i] - '0' > biggest)
+            int d = s[i] - '0';
+            if (d > bestDigit)
             {
-                biggest = bank[i] - '0';
-                biggestIndex = i + 1;
+                bestDigit = d;
+                bestIndex = i;
             }
         }
 
-        return {biggest, biggestIndex};
+        return { bestDigit, bestIndex + 1 };
     }
 
     uint64_t PartTwo(File& f) override
@@ -74,17 +81,15 @@ public:
             uint64_t joltage = 0;
             int start = 0;
 
-            for (int i = 0; i < 12; i++)
+            for (int k = 0; k < 12; k++)
             {
                 joltage *= 10;
 
-                auto res = FindNextBiggestNoOffset(bank, start, 12 - i);
+                auto res = FindNextBiggest(bank, start, k);
 
+                joltage += res.first;
                 start = res.second;
-                joltage += res.first - '0';
             }
-
-            std::cout << joltage << std::endl;
 
             totalJoltage += joltage;
         }
