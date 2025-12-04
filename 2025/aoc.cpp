@@ -1,8 +1,11 @@
+
 #include <iostream>
 #include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <numeric>
+#include <vector>
 
 #include "aoc.hpp"
 #include "day1.hpp"
@@ -12,7 +15,7 @@
 
 void GenerateDay(int day, std::filesystem::path base)
 {
-    std::cout << "Ganerating template for day " << day << std::endl;
+    std::cout << "Generating template for day " << day << std::endl;
     std::ostringstream className;
     className << "Day" << std::setw(2) << std::setfill('0') << day; // Day01
     std::string classStr = className.str();
@@ -71,6 +74,7 @@ int main(int argc, char** argv)
 
     // Very shit command-line parsing :tm:
     int run_day = 0;
+    int num_runs = 1;
     std::filesystem::path base = "./";
 
     for (int i = 1; i < argc; ++i)
@@ -88,6 +92,20 @@ int main(int argc, char** argv)
             ++i;
             run_day = std::atoi(argv[i]);
             std::cout << "Selected day to run: " << run_day << "\n";
+        }
+
+        // Runs flag
+        if (arg == "-r" || arg == "--runs")
+        {
+            if (i + 1 >= argc)
+            {
+                std::cerr << "Error: -r requires a number of runs\n";
+                return 1;
+            }
+            ++i;
+            num_runs = std::atoi(argv[i]);
+            if (num_runs < 1) num_runs = 1;
+            std::cout << "Number of runs for averaging: " << num_runs << "\n";
         }
 
         // Path flag
@@ -120,23 +138,15 @@ int main(int argc, char** argv)
         {
             std::cout << "\nUsage:\n"
                       << "  -d [day]    Run a specific day\n"
+                      << "  -r [runs]   Number of runs to average timings (default: 1)\n"
                       << "  -p [path]   Set a base path for input\n"
-                      << "  -g [day]    Generate a new day! (Stil need to add to compiler)\n"
+                      << "  -g [day]    Generate a new day! (Still need to add to compiler)\n"
                       << "  help        Show this help message\n"
                       << "  (no args)   Run all days\n";
             return 0;
         }
-
-        // Unknown argument
-        if (arg != "-d" && arg != "-p" && arg != "--path" &&
-            arg != "help" && arg != "--help" && arg != "-h" &&
-            arg != "-g" && arg != "--generate")
-        {
-            std::cerr << "Unknown argument: " << arg << "\n"
-                      << "Use 'help' for usage information.\n";
-            return 1;
-        }
     }
+
     //
     // Run days
     if (run_day == 0)
@@ -153,40 +163,74 @@ int main(int argc, char** argv)
             File file1{path};
 
             uint64_t partOne = day->PartOne(file);
-            int partTwo = day->PartTwo(file1);
+            uint64_t partTwo = day->PartTwo(file1);
 
             std::cout << "Part 1: " << partOne << "\n";
             std::cout << "Part 2: " << partTwo << "\n";
         }
-    } else
+    }
+    else
     {
         for (auto& [num, day] : GetRegisteredDays(run_day))
         {
-            std::cout << "Running only Day " << num << ":\n";
+            std::cout << "Running Day " << num;
+            if (num_runs > 1) {
+                std::cout << " (averaging over " << num_runs << " runs)";
+            }
+            std::cout << ":\n";
 
             std::string filename = std::to_string(num) + ".txt";
             std::filesystem::path path = base / filename;
 
             std::cout << "Reading " << path << "..." << std::endl;
-            File file{path};
-            File file1{path};
 
-            auto start = std::chrono::high_resolution_clock::now();
+            // Storage for timing results
+            std::vector<double> part1_times;
+            std::vector<double> part2_times;
+            std::vector<double> total_times;
 
-            uint64_t partOne = day->PartOne(file);
+            part1_times.reserve(num_runs);
+            part2_times.reserve(num_runs);
+            total_times.reserve(num_runs);
 
-            auto endpart1 = std::chrono::high_resolution_clock::now();
-            auto startpart2 = std::chrono::high_resolution_clock::now();
+            uint64_t partOne = 0;
+            uint64_t partTwo = 0;
 
-            uint64_t partTwo = day->PartTwo(file1);
+            // Run multiple times
+            for (int run = 0; run < num_runs; ++run)
+            {
+                File file{path};
+                File file1{path};
 
-            auto end = std::chrono::high_resolution_clock::now();
+                auto start = std::chrono::high_resolution_clock::now();
 
-            std::cout << "Part 1: " << partOne << " - took " << std::chrono::duration<double, std::milli>(endpart1 - start).count() << "ms" << std::endl;
-            std::cout << "Part 2: " << partTwo << " - took " << std::chrono::duration<double, std::milli>(end - startpart2).count() << "ms" << std::endl;
-            std::cout << "Day " << run_day << " ran in " << std::chrono::duration<double, std::milli>(end - start).count() << "ms" << std::endl;
+                partOne = day->PartOne(file);
+
+                auto endpart1 = std::chrono::high_resolution_clock::now();
+                auto startpart2 = std::chrono::high_resolution_clock::now();
+
+                partTwo = day->PartTwo(file1);
+
+                auto end = std::chrono::high_resolution_clock::now();
+
+                part1_times.push_back(std::chrono::duration<double, std::milli>(endpart1 - start).count());
+                part2_times.push_back(std::chrono::duration<double, std::milli>(end - startpart2).count());
+                total_times.push_back(std::chrono::duration<double, std::milli>(end - start).count());
+            }
+
+            // Calculate averages
+            double p1_avg = std::accumulate(part1_times.begin(), part1_times.end(), 0.0) / num_runs;
+            double p2_avg = std::accumulate(part2_times.begin(), part2_times.end(), 0.0) / num_runs;
+            double total_avg = std::accumulate(total_times.begin(), total_times.end(), 0.0) / num_runs;
+
+            // Print results
+            std::cout << "Part 1: " << partOne << " - took "
+                      << std::fixed << std::setprecision(3) << p1_avg << "ms" << std::endl;
+            std::cout << "Part 2: " << partTwo << " - took "
+                      << std::fixed << std::setprecision(3) << p2_avg << "ms" << std::endl;
+            std::cout << "Day " << run_day << " ran in "
+                      << std::fixed << std::setprecision(3) << total_avg << "ms" << std::endl;
         }
     }
-
 }
 

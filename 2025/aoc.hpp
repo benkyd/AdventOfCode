@@ -9,78 +9,102 @@
 template<typename T>
 class Grid
 {
-    public:
-        Grid() = default;
-        Grid(size_t h, size_t w) : data(h, std::vector<T>(w)) {}
-        Grid(const std::vector<std::vector<T>>& d) : data(d) {}
+public:
+    Grid() = default;
 
-        size_t Height() const { return data.size(); }
-        size_t Width() const { return data.empty() ? 0 : data[0].size(); }
+    Grid(size_t h, size_t w) : height(h), width(w), data(h * w) {}
 
-        const T& At(size_t r, size_t c) const { return data[r][c]; }
+    Grid(const std::vector<T> d)
+        : height(d.size())
+        , width(d.empty() ? 0 : d[0].size())
+        , data(d) {}
 
-        const T* SafeAt(size_t r, size_t c) const
+    size_t Height() const { return height; }
+    size_t Width() const { return width; }
+
+    const T& At(size_t r, size_t c) const
+    {
+        return data[r * width + c];
+    }
+
+    const T* SafeAt(size_t r, size_t c) const
+    {
+        if (r >= height || c >= width) return nullptr;
+        return &data[r * width + c];
+    }
+
+    void ReplaceAt(size_t r, size_t c, const T& value)
+    {
+        data[r * width + c] = value;
+    }
+
+    size_t Neighbours4(size_t r, size_t c, const T* out[4], bool wrap = false) const
+    {
+        size_t count = 0;
+
+        if (wrap)
         {
-            if (r >= Height() || c >= Width()) return nullptr;
-            return &data[r][c];
+            out[count++] = &data[((r - 1 + height) % height) * width + c];
+            out[count++] = &data[((r + 1) % height) * width + c];
+            out[count++] = &data[r * width + ((c - 1 + width) % width)];
+            out[count++] = &data[r * width + ((c + 1) % width)];
+        } else
+        {
+            if (r > 0)
+                out[count++] = &data[(r - 1) * width + c];
+            if (r + 1 < height)
+                out[count++] = &data[(r + 1) * width + c];
+            if (c > 0)
+                out[count++] = &data[r * width + (c - 1)];
+            if (c + 1 < width)
+                out[count++] = &data[r * width + (c + 1)];
         }
 
-        void ReplaceAt(size_t r, size_t c, const T& value)
-        {
-            data[r][c] = value;
-        }
-        //
-        // 4-neighbours (up, down, left, right)
-        std::vector<const T*> Neighbours4(size_t r, size_t c, bool wrap = false) const
-        {
-            std::vector<const T*> out;
+        return count;
+    }
 
-            auto H = Height();
-            auto W = Width();
+    size_t Neighbours8(size_t r, size_t c, const T* out[8], bool wrap = false) const
+    {
+        size_t count = 0;
 
-            auto idx = [&](size_t x, size_t limit) -> size_t {
-                return wrap ? ((x + limit) % limit) : x;
-            };
+        if (wrap) {
+            for (int dr = -1; dr <= 1; ++dr)
+            {
+                for (int dc = -1; dc <= 1; ++dc)
+                {
+                    if (dr == 0 && dc == 0) continue;
 
-            if (r > 0 || wrap) out.push_back(&data[idx(r - 1, H)][c]);
-            if (r + 1 < H || wrap) out.push_back(&data[idx(r + 1, H)][c]);
-            if (c > 0 || wrap) out.push_back(&data[r][idx(c - 1, W)]);
-            if (c + 1 < W || wrap) out.push_back(&data[r][idx(c + 1, W)]);
-
-            return out;
-        }
-
-        // 8-neighbours (diagonals)
-        std::vector<const T*> Neighbours8(size_t r, size_t c, bool wrap = false) const
-        {
-            std::vector<const T*> out;
-            auto H = Height();
-            auto W = Width();
-
-            auto idx = [&](size_t x, size_t limit) -> size_t {
-                return wrap ? ((x + limit) % limit) : x;
-            };
-
-            for (int dr = -1; dr <= 1; dr++) {
-                for (int dc = -1; dc <= 1; dc++) {
+                    size_t rr = (r + dr + height) % height;
+                    size_t cc = (c + dc + width) % width;
+                    out[count++] = &data[rr * width + cc];
+                }
+            }
+        } else {
+            for (int dr = -1; dr <= 1; ++dr)
+            {
+                for (int dc = -1; dc <= 1; ++dc)
+                {
                     if (dr == 0 && dc == 0) continue;
 
                     size_t rr = r + dr;
                     size_t cc = c + dc;
 
-                    if (!wrap) {
-                        if (rr >= H || cc >= W) continue;
-                    }
+                    if (rr >= height || cc >= width) continue;
 
-                    out.push_back(&data[idx(rr, H)][idx(cc, W)]);
+                    out[count++] = &data[rr * width + cc];
                 }
             }
-
-            return out;
         }
-    private:
-        std::vector<std::vector<T>> data;
+
+        return count;
+    }
+
+private:
+    size_t height = 0;
+    size_t width = 0;
+    std::vector<T> data;
 };
+
 
 struct FileFragment
 {
@@ -238,28 +262,32 @@ class File
         template<typename T>
             Grid<T> AsGrid() const
             {
-                std::vector<std::vector<T>> d;
-                d.reserve(_lines.size());
+                const size_t height = _lines.size();
+                if (height == 0) return Grid<T>(0, 0);
 
-                for (auto& line : _lines)
+                const size_t width = _lines[0].size();
+
+                Grid<T> grid(height, width);
+
+                for (size_t r = 0; r < height; ++r)
                 {
-                    std::vector<T> row;
-                    row.reserve(line.size());
-
-                    for (char ch : line)
+                    const auto& line = _lines[r];
+                    for (size_t c = 0; c < width; ++c)
                     {
+                        char ch = line[c];
+
                         if constexpr (std::is_constructible_v<T, char>)
                         {
-                            row.emplace_back(T(ch));
+                            grid.ReplaceAt(r, c, T(ch));
                         }
                         else if constexpr (std::is_constructible_v<T, std::string_view>)
                         {
-                            row.emplace_back(T(std::string_view(&ch, 1)));
+                            grid.ReplaceAt(r, c, T(std::string_view(&ch, 1)));
                         }
                         else if constexpr (std::is_arithmetic_v<T>)
                         {
                             if (std::isdigit(ch))
-                                row.emplace_back(T(ch - '0'));
+                                grid.ReplaceAt(r, c, T(ch - '0'));
                             else
                                 throw std::runtime_error("Grid<T>: cannot convert character to numeric T");
                         }
@@ -268,11 +296,9 @@ class File
                             static_assert(sizeof(T) == 0, "Grid<T>: T must be constructible from char or string_view");
                         }
                     }
-
-                    d.push_back(std::move(row));
                 }
 
-                return Grid<T>(d);
+                return grid;
             }
 
 
